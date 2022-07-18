@@ -31,6 +31,7 @@
     "typescript": "^4.7.4"
   },
   "overrides": {
+    "react-refresh": "0.x",
     "@storybook/react-docgen-typescript-plugin": {
       "webpack": "5.x"
     },
