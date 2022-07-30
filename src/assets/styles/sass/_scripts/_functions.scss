@@ -1,0 +1,91 @@
+@use "sass:map";
+@use "sass:list";
+
+// Functions
+@function elevation-shadows($elevation-numbers) {
+  $light-positions: (
+    "top-left": (
+      "shadow": (
+        1,
+        1,
+      ),
+      "light": (
+        -1,
+        -1,
+      ),
+    ),
+    "top-right": (
+      "shadow": (
+        -1,
+        1,
+      ),
+      "light": (
+        1,
+        -1,
+      ),
+    ),
+    "bottom-left": (
+      "shadow": (
+        1,
+        -1,
+      ),
+      "light": (
+        -1,
+        1,
+      ),
+    ),
+    "bottom-right": (
+      "shadow": (
+        -1,
+        -1,
+      ),
+      "light": (
+        1,
+        1,
+      ),
+    ),
+  );
+
+  $shadow-map: ();
+
+  @each $position, $position-values in $light-positions {
+    $position-shadow-value: map.get($position-values, "shadow");
+    $position-light-value: map.get($position-values, "light");
+
+    @for $elevation from 0 through $elevation-numbers {
+      $shadows: null;
+
+      @if $elevation==0 {
+        $shadows: ($elevation + "-#{$position}": none);
+      } @else {
+        $positive-shadow: (
+          (list.nth($position-shadow-value, 1) * $elevation * $shadow-step)
+            (list.nth($position-shadow-value, 2) * $elevation * $shadow-step)
+            (2 * $elevation * $shadow-step)
+            $shadow-color
+        );
+        $positive-light: (
+          (list.nth($position-light-value, 1) * $elevation * $shadow-step)
+            (list.nth($position-light-value, 2) * $elevation * $shadow-step)
+            (2 * $elevation * $shadow-step)
+            $light-color
+        );
+
+        $shadows: (
+          "p-#{$elevation}--#{$position}": (
+            $positive-shadow,
+            $positive-light,
+          ),
+          "m-#{$elevation}--#{$position}": (
+            inset $positive-shadow,
+            inset $positive-light,
+          ),
+        );
+      }
+
+      $shadow-map: map.merge($shadow-map, $shadows);
+    }
+  }
+
+  @return $shadow-map;
+}

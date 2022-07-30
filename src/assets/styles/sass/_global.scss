@@ -1,0 +1,92 @@
+@import "node_modules/minireset.css/minireset.sass";
+
+@import "./variables";
+@import "./scripts";
+
+html {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  width: 100%;
+  min-height: 100%;
+  background-color: $primary-background-color;
+}
+
+button {
+  all: unset;
+
+  @include md-button;
+
+  background-color: $primary-color;
+  color: $white-color;
+
+  &.sm {
+    padding: 8px 15px;
+  }
+  &.md {
+    @include md-button;
+  }
+  &.lg {
+    padding: 13px 25px;
+  }
+
+  &.primary {
+    background-color: $primary-color;
+    color: $white-color;
+  }
+  &.secondary {
+    background-color: $secondary-color;
+    color: $white-color;
+  }
+  &.success {
+    background-color: $success-color;
+    color: $white-color;
+  }
+  &.warning {
+    background-color: $warning-color;
+    color: $white-color;
+  }
+  &.error {
+    background-color: $error-color;
+    color: $white-color;
+  }
+  &.info {
+    background-color: $info-color;
+    color: $white-color;
+  }
+}
+
+// border radius
+$previous-value: 0;
+@for $i from 0 through 5 {
+  $radius: 0;
+
+  @if $i==0 {
+    $radius: 0;
+  } @else if $i==1 {
+    $radius: $radius-step;
+  } @else {
+    $radius: calc(2 * $previous-value);
+  }
+
+  .round-#{$i} {
+    border-radius: $radius;
+  }
+
+  $previous-value: $radius;
+}
+
+.round {
+  border-radius: 50%;
+}
+
+// Elevations
+$elevation-shadows: elevation-shadows(10);
+
+@each $name, $value in $elevation-shadows {
+  .elevation-#{$name} {
+    box-shadow: $value;
+  }
+}
