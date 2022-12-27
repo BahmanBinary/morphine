@@ -1,3 +1,6 @@
+import { RefObject } from "react";
+import { useShadow } from "../kit/hooks/useShadow";
+
 type HTMLButtonType = JSX.IntrinsicElements["button"];
 interface ButtonType extends HTMLButtonType {
   size?: "sm" | "md" | "lg";
@@ -17,10 +20,13 @@ export function Button({
   buttonType = "secondary",
   ...props
 }: ButtonType): JSX.Element {
+  const buttonRef = useShadow() as RefObject<HTMLButtonElement>;
+
   return (
     <button
+      ref={buttonRef}
       className={
-        `elevation-p-1--top-left round-1 ${size} ${buttonType} ` +
+        `round-1 ${size} ${buttonType} ` +
         (className ?? "")
       }
       {...props}
