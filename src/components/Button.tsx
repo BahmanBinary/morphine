@@ -20,7 +20,8 @@ export function Button({
   return (
     <button
       className={
-        `elevation-p-1--top-left round-1 ${size} ${buttonType} ` + className
+        `elevation-p-1--top-left round-1 ${size} ${buttonType} ` +
+        (className ?? "")
       }
       {...props}
     >
