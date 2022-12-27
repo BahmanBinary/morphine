@@ -1,4 +1,3 @@
-import Div from "../src/components/containers/Div";
 import "./styles.css";
 
 export const parameters = {
@@ -12,10 +11,4 @@ export const parameters = {
   },
 };
 
-export const decorators = [
-  (Story) => (
-    <Div>
-      <Story />
-    </Div>
-  ),
-];
+export const decorators = [(Story) => <Story />];

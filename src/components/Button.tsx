@@ -1,5 +1,5 @@
-type ButtonType = JSX.IntrinsicElements["button"];
-interface AppBodyProps extends ButtonType {
+type HTMLButtonType = JSX.IntrinsicElements["button"];
+interface ButtonType extends HTMLButtonType {
   size?: "sm" | "md" | "lg";
   buttonType?:
     | "primary"
@@ -16,7 +16,7 @@ export function Button({
   size = "md",
   buttonType = "secondary",
   ...props
-}: AppBodyProps): JSX.Element {
+}: ButtonType): JSX.Element {
   return (
     <button
       className={
