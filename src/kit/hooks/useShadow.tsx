@@ -1,11 +1,13 @@
-import { CSSProperties, useEffect, useRef } from "react";
+import { CSSProperties, useCallback, useEffect, useRef } from "react";
 import {
   ElementProperties,
   ElementShape,
+  ElementShapeWithGradient,
   ElevationLevel,
   LightIntensity,
   LightSource,
   ShadowProperties,
+  ShapeStyles,
 } from "../types/hooks/useShadow";
 import chroma from "chroma-js";
 
@@ -15,34 +17,39 @@ const transparentValues: CSSProperties["backgroundColor"][] = [
   "#00000000",
 ];
 
-export function useShadow(
-  level: ElevationLevel = 1,
-  shape: ElementShape = "convex"
-) {
+export function useShadow(shape: ElementShape = "flat") {
   const elementRef = useRef<HTMLElement>(null!);
+  const shapeStyles = useRef<Partial<ShapeStyles> | null>(null);
 
-  useEffect(() => {
-    const element = elementRef.current;
+  const setStyle = useCallback((element: HTMLElement, shape: ElementShape) => {
     const size = Math.round(
       Math.max(element.offsetWidth, element.offsetHeight)
     );
 
-    const shadowProperties = getShadowProperties(level, size);
-    const contextBackgroundColor = getBackgroundColor(element);
+    const shadowProperties = getShadowProperties(size);
+    const contextBackgroundColor = getContextBackgroundColor(element);
 
     const properties: ElementProperties = {
       contextBackgroundColor,
+      elementBackgroundColor: getComputedStyle(element).backgroundColor,
       shadowProperties,
       shape,
     };
 
-    setStyle(element, properties);
-  }, [level, shape]);
+    shapeStyles.current = getShapeStyles(properties);
+  }, []);
+
+  useEffect(() => {
+    const element = elementRef.current;
+
+    setStyle(element, shape);
+  }, [shape]);
 
   return elementRef;
 }
 
-function getShadowProperties(level: number, size: number) {
+function getShadowProperties(size: number) {
+  const level = getElevationLevel();
   const lightSource =
     (document.documentElement.dataset.lightSource as LightSource) ?? "top-left";
 
@@ -82,7 +89,7 @@ function getShadowProperties(level: number, size: number) {
   return shadowProperties;
 }
 
-function getBackgroundColor(element: HTMLElement) {
+function getContextBackgroundColor(element: HTMLElement) {
   let parentElement = element.parentElement;
 
   while (parentElement) {
@@ -98,25 +105,38 @@ function getBackgroundColor(element: HTMLElement) {
   return "#FFF";
 }
 
-function setStyle(element: HTMLElement, properties: ElementProperties) {
-  const lightIntensity: LightIntensity = document.documentElement.dataset
-    .lightIntensity
-    ? (Number(
-        document.documentElement.dataset.lightIntensity
-      ) as LightIntensity)
-    : 1;
+function getShapeStyles(properties: ElementProperties) {
+  const styles: Partial<ShapeStyles> = {};
 
+  const shapes: ElementShape[] = ["concave", "convex", "flat", "pressed"];
+
+  for (const shape of shapes)
+    styles[shape] = {
+      boxShadow: getShapeShadowStyle(shape, properties),
+      ...(!["concave", "convex"].includes(shape)
+        ? {
+            backgroundColor: getShapeBackgroundStyle(
+              shape as ElementShapeWithGradient,
+              properties
+            ),
+          }
+        : {}),
+    };
+
+  return styles;
+}
+
+function getShapeShadowStyle(
+  shape: ElementShape,
+  properties: ElementProperties
+) {
   const shadowProperties = properties.shadowProperties;
+  const elementBackgroundColor = properties.elementBackgroundColor;
+  const intensityValue = getLightIntensityValue();
 
-  const intensityValue = Number(
-    ((1 + (lightIntensity - 1) * 0.25) * 0.67).toFixed(2)
-  );
-
-  const elementBackgroundColor = getComputedStyle(element).backgroundColor;
-
-  const insetAttribute = properties.shape === "pressed" ? "inset " : "";
+  const insetAttribute = shape === "pressed" ? "inset " : "";
   const shadowBaseColor =
-    properties.shape === "pressed"
+    shape === "pressed"
       ? transparentValues.includes(elementBackgroundColor)
         ? properties.contextBackgroundColor
         : elementBackgroundColor
@@ -134,24 +154,45 @@ function setStyle(element: HTMLElement, properties: ElementProperties) {
       shadowProperties.blur
     }px ${shadowLightColor}`;
 
-  if (["concave", "convex"].includes(properties.shape)) {
-    const shape = properties.shape;
+  return `${darkShadow},${lightShadow}`;
+}
 
-    const backgroundBaseColor = transparentValues.includes(
-      elementBackgroundColor
-    )
-      ? properties.contextBackgroundColor
-      : elementBackgroundColor;
+function getShapeBackgroundStyle(
+  shape: ElementShapeWithGradient,
+  properties: ElementProperties
+) {
+  const elementBackgroundColor = properties.elementBackgroundColor;
 
-    const backgroundDarkColor =
-      chroma(backgroundBaseColor).darken(intensityValue);
-    const backgroundLightColor =
-      chroma(backgroundBaseColor).brighten(intensityValue);
+  const intensityValue = getLightIntensityValue();
 
-    element.style.background = `linear-gradient(${shadowProperties.angle}deg,${
-      shape === "concave" ? backgroundDarkColor : backgroundLightColor
-    },${shape === "concave" ? backgroundLightColor : backgroundDarkColor})`;
-  }
+  const backgroundBaseColor = transparentValues.includes(elementBackgroundColor)
+    ? properties.contextBackgroundColor
+    : elementBackgroundColor;
 
-  element.style.boxShadow = `${darkShadow},${lightShadow}`;
+  const backgroundDarkColor =
+    chroma(backgroundBaseColor).darken(intensityValue);
+  const backgroundLightColor =
+    chroma(backgroundBaseColor).brighten(intensityValue);
+
+  return `linear-gradient(${properties.shadowProperties.angle}deg,${
+    shape === "concave" ? backgroundDarkColor : backgroundLightColor
+  },${shape === "concave" ? backgroundLightColor : backgroundDarkColor})`;
+}
+
+function getElevationLevel(): ElevationLevel {
+  return document.documentElement.dataset.elevationLevel
+    ? (Number(
+        document.documentElement.dataset.elevationLevel
+      ) as ElevationLevel)
+    : 1;
+}
+
+function getLightIntensityValue() {
+  const lightIntensityLevel = document.documentElement.dataset.lightIntensity
+    ? (Number(
+        document.documentElement.dataset.lightIntensity
+      ) as LightIntensity)
+    : 1;
+
+  return Number(((1 + (lightIntensityLevel - 1) * 0.25) * 0.67).toFixed(2));
 }
